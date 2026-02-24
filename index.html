@@ -1,47 +1,35 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CertGuard - Exemption Certificate Manager</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh}
-</style>
-</head>
-<body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useMemo } = React;
+import { useState, useMemo } from "react";
 
 const REASONS = ["Resale","Manufacturing","Agricultural","Government Entity","Non-Profit / Charitable","Industrial Processing","Direct Pay Permit","Foreign Diplomat","Tribal","Other"];
 const ALLST = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
 const CTYPES = ["Blanket","Single Purchase"];
 
 const seed = [
-  {id:"EX-001",customer:"Acme Manufacturing Co.",ein:"12-3456789",type:"Blanket",reason:"Manufacturing",states:["TX","CA","NY"],issueDate:"2024-03-15",expDate:"2025-03-15",notes:"Annual renewal needed"},
-  {id:"EX-002",customer:"State of Texas - Dept of Transportation",ein:"74-6000000",type:"Blanket",reason:"Government Entity",states:["TX"],issueDate:"2025-01-10",expDate:"2027-01-10",notes:""},
-  {id:"EX-003",customer:"GreenFields Agricultural LLC",ein:"45-6789012",type:"Blanket",reason:"Agricultural",states:["IA","NE","KS"],issueDate:"2024-11-01",expDate:"2025-11-01",notes:""},
-  {id:"EX-004",customer:"ResellerHub Inc.",ein:"98-7654321",type:"Blanket",reason:"Resale",states:["FL","GA"],issueDate:"2024-06-20",expDate:"2025-06-20",notes:"Renewal notice sent"},
-  {id:"EX-005",customer:"Hope Foundation",ein:"33-4455667",type:"Single Purchase",reason:"Non-Profit / Charitable",states:["NY"],issueDate:"2025-02-01",expDate:"2026-02-01",notes:"501(c)(3) verified"},
-  {id:"EX-006",customer:"TechBuild Solutions",ein:"55-1234567",type:"Blanket",reason:"Resale",states:["WA","OR","CA"],issueDate:"2024-08-12",expDate:"2025-05-12",notes:""},
-  {id:"EX-007",customer:"Midwest Processing Inc.",ein:"22-9876543",type:"Blanket",reason:"Industrial Processing",states:["OH","IN","MI"],issueDate:"2023-12-01",expDate:"2024-12-01",notes:"Attempted contact 3x"},
+  {id:"EX-001",customer:"Acme Manufacturing Co.",ein:"12-3456789",email:"tax@acmemfg.com",type:"Blanket",reason:"Manufacturing",states:["TX","CA","NY"],issueDate:"2024-03-15",expDate:"2025-03-15",notes:"Annual renewal needed",renewalSent:false},
+  {id:"EX-002",customer:"State of Texas - Dept of Transportation",ein:"74-6000000",email:"procurement@txdot.gov",type:"Blanket",reason:"Government Entity",states:["TX"],issueDate:"2025-01-10",expDate:"2027-01-10",notes:"",renewalSent:false},
+  {id:"EX-003",customer:"GreenFields Agricultural LLC",ein:"45-6789012",email:"admin@greenfieldsag.com",type:"Blanket",reason:"Agricultural",states:["IA","NE","KS"],issueDate:"2024-11-01",expDate:"2025-11-01",notes:"",renewalSent:false},
+  {id:"EX-004",customer:"ResellerHub Inc.",ein:"98-7654321",email:"compliance@resellerhub.com",type:"Blanket",reason:"Resale",states:["FL","GA"],issueDate:"2024-06-20",expDate:"2025-06-20",notes:"Renewal notice sent",renewalSent:true},
+  {id:"EX-005",customer:"Hope Foundation",ein:"33-4455667",email:"finance@hopefoundation.org",type:"Single Purchase",reason:"Non-Profit / Charitable",states:["NY"],issueDate:"2025-02-01",expDate:"2026-02-01",notes:"501(c)(3) verified",renewalSent:false},
+  {id:"EX-006",customer:"TechBuild Solutions",ein:"55-1234567",email:"ap@techbuild.io",type:"Blanket",reason:"Resale",states:["WA","OR","CA"],issueDate:"2024-08-12",expDate:"2025-05-12",notes:"",renewalSent:false},
+  {id:"EX-007",customer:"Midwest Processing Inc.",ein:"22-9876543",email:"tax@midwestprocessing.com",type:"Blanket",reason:"Industrial Processing",states:["OH","IN","MI"],issueDate:"2023-12-01",expDate:"2024-12-01",notes:"Attempted contact 3x",renewalSent:true},
 ];
 
 function gSt(d) {
-  const diff = (new Date(d) - new Date()) / 86400000;
+  var diff = (new Date(d) - new Date()) / 86400000;
   if (diff < 0) return "expired";
-  if (diff < 60) return "expiring_soon";
+  if (diff < 90) return "expiring_soon";
   return "valid";
 }
 
-function validate(f) {
-  const e = {};
+function daysUntil(d) {
+  return Math.ceil((new Date(d) - new Date()) / 86400000);
+}
+
+function validateForm(f) {
+  var e = {};
   if (!f.customer.trim()) e.customer = "Customer name required";
   if (!/^\d{2}-\d{7}$/.test(f.ein)) e.ein = "Format: XX-XXXXXXX";
+  if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email)) e.email = "Invalid email format";
   if (!f.states.length) e.states = "Select at least one state";
   if (!f.issueDate) e.issueDate = "Required";
   if (!f.expDate) e.expDate = "Required";
@@ -49,22 +37,19 @@ function validate(f) {
   return e;
 }
 
-const Badge = ({ status }) => {
-  const m = {
+function Badge(props) {
+  var status = props.status;
+  var m = {
     valid: {c:"#0d9488",bg:"#ccfbf1",l:"Valid"},
     expiring_soon: {c:"#d97706",bg:"#fef3c7",l:"Expiring Soon"},
     expired: {c:"#dc2626",bg:"#fee2e2",l:"Expired"}
   };
-  const v = m[status] || {c:"#6b7280",bg:"#f3f4f6",l:status};
-  return (
-    <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:16,fontSize:12,fontWeight:600,color:v.c,background:v.bg}}>
-      {v.l}
-    </span>
-  );
-};
+  var v = m[status] || {c:"#6b7280",bg:"#f3f4f6",l:status};
+  return React.createElement("span", {style:{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:16,fontSize:12,fontWeight:600,color:v.c,background:v.bg}}, v.l);
+}
 
-const S = {
-  wrap:{minHeight:"100vh",background:"#f8fafc",color:"#1e293b"},
+var S = {
+  wrap:{minHeight:"100vh",background:"#f8fafc",color:"#1e293b",fontFamily:"system-ui,-apple-system,sans-serif"},
   hdr:{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"16px 24px"},
   hdrIn:{maxWidth:1100,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12},
   logo:{display:"flex",alignItems:"center",gap:10},
@@ -73,15 +58,17 @@ const S = {
   btnP:{background:"#4f46e5",color:"#fff"},
   btnS:{background:"#fff",border:"1px solid #e2e8f0",color:"#475569"},
   btnD:{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca"},
+  btnG:{background:"#f0fdf4",color:"#16a34a",border:"1px solid #bbf7d0"},
   main:{maxWidth:1100,margin:"0 auto",padding:24},
-  row4:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12,marginBottom:24},
+  row4:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:24},
   card:{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:18},
   cardIc:{width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:13,marginBottom:8},
   cardV:{fontSize:26,fontWeight:800},
   cardL:{fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:1,marginTop:4,fontWeight:600},
   alert:{borderRadius:12,padding:14,display:"flex",gap:10,marginBottom:10,fontSize:13},
   alertA:{background:"#fffbeb",border:"1px solid #fde68a",color:"#92400e"},
-  alertR:{background:"#fef2f2",border:"1px solid #fecaca",color:"#991b1b",marginBottom:24},
+  alertR:{background:"#fef2f2",border:"1px solid #fecaca",color:"#991b1b",marginBottom:16},
+  alertB:{background:"#eff6ff",border:"1px solid #bfdbfe",color:"#1e40af",marginBottom:24},
   toolbar:{display:"flex",gap:12,marginBottom:20,flexWrap:"wrap"},
   searchW:{flex:1,minWidth:200},
   searchI:{width:"100%",background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:"9px 14px",fontSize:14,outline:"none",color:"#1e293b"},
@@ -96,8 +83,8 @@ const S = {
   aBtn:{background:"none",border:"none",padding:"4px 8px",fontSize:13,color:"#64748b",borderRadius:6,cursor:"pointer",fontWeight:500},
   ov:{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:16},
   mdl:{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,width:"100%",maxHeight:"90vh",overflowY:"auto",padding:24},
-  mdlS:{maxWidth:500},
-  mdlL:{maxWidth:640},
+  mdlS:{maxWidth:520},
+  mdlL:{maxWidth:660},
   mdlH:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18},
   mdlT:{fontSize:18,fontWeight:700},
   xb:{background:"none",border:"none",color:"#94a3b8",fontSize:20,cursor:"pointer",padding:"2px 6px"},
@@ -115,45 +102,60 @@ const S = {
   dgv:{color:"#1e293b",marginLeft:4},
   dst:{display:"inline-block",background:"#ede9fe",color:"#6d28d9",fontSize:12,padding:"3px 8px",borderRadius:7,margin:2},
   empty:{padding:40,textAlign:"center",color:"#94a3b8",fontSize:14},
+  sentBadge:{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:10,fontSize:11,fontWeight:600,color:"#16a34a",background:"#f0fdf4",border:"1px solid #bbf7d0"},
+  pendBadge:{display:"inline-flex",alignItems:"center",gap:4,padding:"2px 8px",borderRadius:10,fontSize:11,fontWeight:600,color:"#d97706",background:"#fffbeb",border:"1px solid #fde68a"},
 };
 
-function App() {
-  const [certs, setCerts] = useState(seed);
-  const [sQ, setSQ] = useState("");
-  const [sF, setSF] = useState("all");
-  const [modal, setModal] = useState("");
-  const [eId, setEId] = useState(null);
-  const [frm, setFrm] = useState({customer:"",ein:"",type:"Blanket",reason:"Resale",states:[],issueDate:"",expDate:"",notes:""});
-  const [fErr, setFErr] = useState({});
-  const [vCert, setVCert] = useState(null);
-  const [nxId, setNxId] = useState(8);
+export default function App() {
+  var _s = useState(seed); var certs = _s[0]; var setCerts = _s[1];
+  var _q = useState(""); var sQ = _q[0]; var setSQ = _q[1];
+  var _f = useState("all"); var sF = _f[0]; var setSF = _f[1];
+  var _m = useState(""); var modal = _m[0]; var setModal = _m[1];
+  var _e = useState(null); var eId = _e[0]; var setEId = _e[1];
+  var _frm = useState({customer:"",ein:"",email:"",type:"Blanket",reason:"Resale",states:[],issueDate:"",expDate:"",notes:""}); var frm = _frm[0]; var setFrm = _frm[1];
+  var _fe = useState({}); var fErr = _fe[0]; var setFErr = _fe[1];
+  var _vc = useState(null); var vCert = _vc[0]; var setVCert = _vc[1];
+  var _nx = useState(8); var nxId = _nx[0]; var setNxId = _nx[1];
+  var _toast = useState(null); var toast = _toast[0]; var setToast = _toast[1];
+  var _renewModal = useState(null); var renewModal = _renewModal[0]; var setRenewModal = _renewModal[1];
 
-  const enriched = useMemo(function() { return certs.map(function(c) { return Object.assign({}, c, {status: gSt(c.expDate)}); }); }, [certs]);
+  var enriched = useMemo(function() {
+    return certs.map(function(c) { return Object.assign({}, c, {status: gSt(c.expDate), daysLeft: daysUntil(c.expDate)}); });
+  }, [certs]);
 
-  const stats = useMemo(function() {
-    var v=0, e=0, x=0;
-    enriched.forEach(function(c) { if(c.status==="valid") v++; else if(c.status==="expiring_soon") e++; else x++; });
-    return {total:enriched.length, valid:v, expiring:e, expired:x};
+  var stats = useMemo(function() {
+    var v=0, e=0, x=0, rn=0;
+    enriched.forEach(function(c) {
+      if (c.status==="valid") v++;
+      else if (c.status==="expiring_soon") { e++; if (!c.renewalSent) rn++; }
+      else x++;
+    });
+    return {total:enriched.length, valid:v, expiring:e, expired:x, renewalNeeded:rn};
   }, [enriched]);
 
-  const filtered = useMemo(function() {
+  var filtered = useMemo(function() {
     var q = sQ.toLowerCase();
     return enriched.filter(function(c) {
-      var ms = !sQ || c.customer.toLowerCase().indexOf(q)>=0 || c.ein.indexOf(q)>=0 || c.id.toLowerCase().indexOf(q)>=0;
+      var ms = !sQ || c.customer.toLowerCase().indexOf(q)>=0 || c.ein.indexOf(q)>=0 || c.id.toLowerCase().indexOf(q)>=0 || (c.email && c.email.toLowerCase().indexOf(q)>=0);
       var mf = sF==="all" || c.status===sF;
       return ms && mf;
     });
   }, [enriched, sQ, sF]);
 
+  function showToast(msg) {
+    setToast(msg);
+    setTimeout(function() { setToast(null); }, 3500);
+  }
+
   function openNew() {
-    setFrm({customer:"",ein:"",type:"Blanket",reason:"Resale",states:[],issueDate:"",expDate:"",notes:""});
+    setFrm({customer:"",ein:"",email:"",type:"Blanket",reason:"Resale",states:[],issueDate:"",expDate:"",notes:""});
     setFErr({}); setEId(null); setModal("form");
   }
   function openEdit(c) {
-    setFrm({customer:c.customer,ein:c.ein,type:c.type,reason:c.reason,states:c.states.slice(),issueDate:c.issueDate,expDate:c.expDate,notes:c.notes});
+    setFrm({customer:c.customer,ein:c.ein,email:c.email||"",type:c.type,reason:c.reason,states:c.states.slice(),issueDate:c.issueDate,expDate:c.expDate,notes:c.notes});
     setFErr({}); setEId(c.id); setVCert(null); setModal("form");
   }
-  function closeAll() { setModal(""); setVCert(null); }
+  function closeAll() { setModal(""); setVCert(null); setRenewModal(null); }
   function doDelete(id) { setCerts(function(p) { return p.filter(function(c) { return c.id!==id; }); }); setVCert(null); }
   function toggleSt(st) {
     setFrm(function(f) {
@@ -165,7 +167,7 @@ function App() {
   }
   function updFld(k, v) { setFrm(function(f) { var o = {}; o[k]=v; return Object.assign({}, f, o); }); }
   function doSubmit() {
-    var errs = validate(frm);
+    var errs = validateForm(frm);
     setFErr(errs);
     if (Object.keys(errs).length) return;
     if (eId) {
@@ -173,16 +175,60 @@ function App() {
     } else {
       var pad = String(nxId).padStart(3,"0");
       setNxId(function(n) { return n+1; });
-      setCerts(function(p) { return [Object.assign({id:"EX-"+pad}, frm)].concat(p); });
+      setCerts(function(p) { return [Object.assign({id:"EX-"+pad, renewalSent:false}, frm)].concat(p); });
     }
     closeAll();
+  }
+
+  function sendRenewal(cert) {
+    if (!cert.email) {
+      setRenewModal(cert);
+      return;
+    }
+    setCerts(function(p) { return p.map(function(c) { return c.id===cert.id ? Object.assign({}, c, {renewalSent:true}) : c; }); });
+    showToast("Renewal request sent to " + cert.email);
+  }
+
+  function sendAllRenewals() {
+    var sent = 0;
+    setCerts(function(p) {
+      return p.map(function(c) {
+        var st = gSt(c.expDate);
+        if (st === "expiring_soon" && !c.renewalSent && c.email) {
+          sent++;
+          return Object.assign({}, c, {renewalSent: true});
+        }
+        return c;
+      });
+    });
+    showToast("Sent " + (sent || "0") + " renewal request" + (sent !== 1 ? "s" : ""));
+  }
+
+  function generateMailto(cert) {
+    var subj = encodeURIComponent("Exemption Certificate Renewal Request - " + cert.customer);
+    var body = encodeURIComponent(
+      "Dear " + cert.customer + ",\n\n" +
+      "Our records indicate that your tax exemption certificate (" + cert.id + ") " +
+      "for the following jurisdictions is " +
+      (cert.daysLeft < 0 ? "expired" : "expiring in " + cert.daysLeft + " days") + ":\n\n" +
+      "  Jurisdictions: " + cert.states.join(", ") + "\n" +
+      "  Exemption Reason: " + cert.reason + "\n" +
+      "  Certificate Type: " + cert.type + "\n" +
+      "  Expiration Date: " + cert.expDate + "\n\n" +
+      "To continue receiving tax-exempt treatment on your purchases, please provide an updated exemption certificate at your earliest convenience.\n\n" +
+      "If your exemption status has changed or you have any questions, please don't hesitate to reach out.\n\n" +
+      "Thank you for your prompt attention to this matter.\n\n" +
+      "Best regards"
+    );
+    return "mailto:" + (cert.email || "") + "?subject=" + subj + "&body=" + body;
   }
 
   var statData = [
     {bg:"#64748b",val:stats.total,label:"Total"},
     {bg:"#059669",val:stats.valid,label:"Valid"},
-    {bg:"#d97706",val:stats.expiring,label:"Expiring Soon"},
-    {bg:"#dc2626",val:stats.expired,label:"Expired"}
+    {bg:"#d97706",val:stats.expiring,label:"Expiring (<90d)"},
+    {bg:"#dc2626",val:stats.expired,label:"Expired"},
+    {bg:"#4f46e5",val:stats.renewalNeeded,label:"Needs Outreach"}
   ];
 
   var filterOpts = [
@@ -191,6 +237,32 @@ function App() {
 
   return (
     <div style={S.wrap}>
+      {/* Toast */}
+      {toast && (
+        <div style={{position:"fixed",top:20,right:20,zIndex:200,background:"#065f46",color:"#d1fae5",padding:"12px 20px",borderRadius:12,fontSize:14,fontWeight:600,boxShadow:"0 8px 30px rgba(0,0,0,.15)",display:"flex",alignItems:"center",gap:8,animation:"slideIn .3s ease"}}>
+          <span style={{fontSize:16}}>&#10003;</span> {toast}
+        </div>
+      )}
+
+      {/* Renewal preview modal */}
+      {renewModal && (
+        <div style={S.ov} onClick={function() { setRenewModal(null); }}>
+          <div style={Object.assign({}, S.mdl, {maxWidth:460})} onClick={function(e) { e.stopPropagation(); }}>
+            <div style={S.mdlH}>
+              <div style={S.mdlT}>No Email on File</div>
+              <button style={S.xb} onClick={function() { setRenewModal(null); }}>x</button>
+            </div>
+            <p style={{fontSize:14,color:"#475569",marginBottom:16}}>
+              <b>{renewModal.customer}</b> does not have an email address on file. Please edit the certificate to add an email before sending a renewal request.
+            </p>
+            <div style={{display:"flex",gap:8}}>
+              <button style={Object.assign({}, S.btn, S.btnP, {flex:1,justifyContent:"center"})} onClick={function() { setRenewModal(null); openEdit(renewModal); }}>Add Email</button>
+              <button style={Object.assign({}, S.btn, S.btnS)} onClick={function() { setRenewModal(null); }}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={S.hdr}>
         <div style={S.hdrIn}>
           <div style={S.logo}>
@@ -202,12 +274,18 @@ function App() {
           </div>
           <div style={{display:"flex",gap:8}}>
             <button style={Object.assign({}, S.btn, S.btnS)} onClick={function() { setCerts(certs.slice()); }}>Revalidate</button>
+            {stats.renewalNeeded > 0 && (
+              <button style={Object.assign({}, S.btn, S.btnG)} onClick={sendAllRenewals}>
+                Send All Renewals ({stats.renewalNeeded})
+              </button>
+            )}
             <button style={Object.assign({}, S.btn, S.btnP)} onClick={openNew}>+ New Certificate</button>
           </div>
         </div>
       </div>
 
       <div style={S.main}>
+        {/* Stats */}
         <div style={S.row4}>
           {statData.map(function(d, i) {
             return (
@@ -220,11 +298,20 @@ function App() {
           })}
         </div>
 
+        {/* Alerts */}
+        {stats.renewalNeeded > 0 && (
+          <div style={Object.assign({}, S.alert, S.alertB)}>
+            <div>
+              <b>{stats.renewalNeeded} certificate{stats.renewalNeeded > 1 ? "s" : ""} need proactive renewal outreach</b>
+              <div style={{fontSize:12,opacity:0.7,marginTop:2}}>These certificates expire within 90 days and no renewal request has been sent yet.</div>
+            </div>
+          </div>
+        )}
         {stats.expiring > 0 && (
           <div style={Object.assign({}, S.alert, S.alertA)}>
             <div>
-              <b>{stats.expiring} certificate{stats.expiring > 1 ? "s" : ""} expiring within 60 days</b>
-              <div style={{fontSize:12,opacity:0.7,marginTop:2}}>Send renewal requests to avoid lapsed exemptions.</div>
+              <b>{stats.expiring} certificate{stats.expiring > 1 ? "s" : ""} expiring within 90 days</b>
+              <div style={{fontSize:12,opacity:0.7,marginTop:2}}>Send renewal requests to avoid lapsed exemptions and unexpected tax liability.</div>
             </div>
           </div>
         )}
@@ -237,9 +324,10 @@ function App() {
           </div>
         )}
 
+        {/* Toolbar */}
         <div style={S.toolbar}>
           <div style={S.searchW}>
-            <input style={S.searchI} placeholder="Search by customer, EIN, or ID..." value={sQ} onChange={function(e) { setSQ(e.target.value); }} />
+            <input style={S.searchI} placeholder="Search by customer, EIN, email, or ID..." value={sQ} onChange={function(e) { setSQ(e.target.value); }} />
           </div>
           <div style={S.fGroup}>
             {filterOpts.map(function(f) {
@@ -248,6 +336,7 @@ function App() {
           </div>
         </div>
 
+        {/* Table */}
         <div style={S.tblW}>
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse"}}>
@@ -258,13 +347,15 @@ function App() {
                   <th style={S.th}>Jurisdictions</th>
                   <th style={S.th}>Expires</th>
                   <th style={S.th}>Status</th>
+                  <th style={S.th}>Renewal</th>
                   <th style={Object.assign({}, S.th, {textAlign:"right"})}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={6}><div style={S.empty}>No certificates found</div></td></tr>
+                  <tr><td colSpan={7}><div style={S.empty}>No certificates found</div></td></tr>
                 ) : filtered.map(function(c) {
+                  var needsRenewal = (c.status === "expiring_soon" || c.status === "expired") && !c.renewalSent;
                   return (
                     <tr key={c.id} style={{cursor:"pointer"}} onClick={function() { setVCert(c); }}
                       onMouseEnter={function(e) { e.currentTarget.style.background="#f8fafc"; }}
@@ -272,17 +363,36 @@ function App() {
                       <td style={S.td}>
                         <div style={{fontWeight:600,color:"#1e293b"}}>{c.customer}</div>
                         <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>{c.id} / {c.ein}</div>
+                        {c.email && <div style={{fontSize:11,color:"#6366f1",marginTop:1}}>{c.email}</div>}
                       </td>
                       <td style={S.td}>
                         <div style={{color:"#475569"}}>{c.reason}</div>
                         <div style={{fontSize:12,color:"#94a3b8"}}>{c.type}</div>
                       </td>
                       <td style={S.td}>
-                        {c.states.slice(0,4).map(function(st) { return <span key={st} style={S.stg}>{st}</span>; })}
-                        {c.states.length > 4 && <span style={{color:"#94a3b8",fontSize:11}}> +{c.states.length-4}</span>}
+                        {c.states.slice(0,3).map(function(st) { return <span key={st} style={S.stg}>{st}</span>; })}
+                        {c.states.length > 3 && <span style={{color:"#94a3b8",fontSize:11}}> +{c.states.length-3}</span>}
                       </td>
-                      <td style={Object.assign({}, S.td, {color:"#94a3b8"})}>{c.expDate}</td>
+                      <td style={S.td}>
+                        <div style={{color: c.daysLeft < 0 ? "#dc2626" : c.daysLeft < 90 ? "#d97706" : "#475569", fontWeight:600, fontSize:13}}>
+                          {c.expDate}
+                        </div>
+                        <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>
+                          {c.daysLeft < 0 ? Math.abs(c.daysLeft) + "d overdue" : c.daysLeft + "d remaining"}
+                        </div>
+                      </td>
                       <td style={S.td}><Badge status={c.status} /></td>
+                      <td style={S.td} onClick={function(e) { e.stopPropagation(); }}>
+                        {c.renewalSent ? (
+                          <span style={S.sentBadge}>Sent</span>
+                        ) : needsRenewal ? (
+                          <button style={Object.assign({}, S.btn, S.btnG, {padding:"5px 12px",fontSize:12})} onClick={function() { sendRenewal(c); }}>
+                            Send
+                          </button>
+                        ) : (
+                          <span style={{fontSize:12,color:"#cbd5e1"}}>--</span>
+                        )}
+                      </td>
                       <td style={Object.assign({}, S.td, {textAlign:"right"})} onClick={function(e) { e.stopPropagation(); }}>
                         <button style={S.aBtn} onClick={function() { setVCert(c); }}>View</button>
                         <button style={S.aBtn} onClick={function() { openEdit(c); }}>Edit</button>
@@ -298,6 +408,7 @@ function App() {
         </div>
       </div>
 
+      {/* View Modal */}
       {vCert && (
         <div style={S.ov} onClick={closeAll}>
           <div style={Object.assign({}, S.mdl, S.mdlS)} onClick={function(e) { e.stopPropagation(); }}>
@@ -308,13 +419,22 @@ function App() {
               </div>
               <button style={S.xb} onClick={closeAll}>x</button>
             </div>
-            <div style={{marginBottom:14}}><Badge status={gSt(vCert.expDate)} /></div>
+            <div style={{marginBottom:14,display:"flex",gap:8,alignItems:"center"}}>
+              <Badge status={gSt(vCert.expDate)} />
+              {vCert.renewalSent && <span style={S.sentBadge}>Renewal Sent</span>}
+            </div>
             <div style={S.dgr}>
               <div><span style={S.dgl}>EIN: </span><span style={S.dgv}>{vCert.ein}</span></div>
               <div><span style={S.dgl}>Type: </span><span style={S.dgv}>{vCert.type}</span></div>
               <div><span style={S.dgl}>Reason: </span><span style={S.dgv}>{vCert.reason}</span></div>
               <div><span style={S.dgl}>Issued: </span><span style={S.dgv}>{vCert.issueDate}</span></div>
               <div><span style={S.dgl}>Expires: </span><span style={S.dgv}>{vCert.expDate}</span></div>
+              <div>
+                <span style={S.dgl}>Email: </span>
+                <span style={{color: vCert.email ? "#4f46e5" : "#dc2626",marginLeft:4,fontSize:14}}>
+                  {vCert.email || "Not on file"}
+                </span>
+              </div>
             </div>
             <div>
               <span style={S.dgl}>Jurisdictions:</span>
@@ -328,14 +448,20 @@ function App() {
                 <div style={{color:"#475569",fontSize:14,marginTop:4}}>{vCert.notes}</div>
               </div>
             )}
-            <div style={{display:"flex",gap:8,marginTop:18}}>
+            <div style={{display:"flex",gap:8,marginTop:18,flexWrap:"wrap"}}>
               <button style={Object.assign({}, S.btn, S.btnP, {flex:1,justifyContent:"center"})} onClick={function() { closeAll(); openEdit(vCert); }}>Edit</button>
+              {vCert.email && (gSt(vCert.expDate) === "expiring_soon" || gSt(vCert.expDate) === "expired") && (
+                <a href={generateMailto(Object.assign({}, vCert, {daysLeft: daysUntil(vCert.expDate)}))} style={Object.assign({}, S.btn, S.btnG, {flex:1,justifyContent:"center",textDecoration:"none"})}>
+                  Open Renewal Email
+                </a>
+              )}
               <button style={Object.assign({}, S.btn, S.btnD, {flex:1,justifyContent:"center"})} onClick={function() { closeAll(); doDelete(vCert.id); }}>Delete</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Form Modal */}
       {modal === "form" && (
         <div style={S.ov} onClick={closeAll}>
           <div style={Object.assign({}, S.mdl, S.mdlL)} onClick={function(e) { e.stopPropagation(); }}>
@@ -353,6 +479,12 @@ function App() {
                 <label style={S.fla}>EIN / Tax ID</label>
                 <input style={Object.assign({}, S.fin, fErr.ein ? S.finEr : {})} value={frm.ein} placeholder="XX-XXXXXXX" onChange={function(e) { updFld("ein",e.target.value); }} />
                 {fErr.ein && <div style={S.fer}>{fErr.ein}</div>}
+              </div>
+              <div style={Object.assign({}, S.fld, {gridColumn:"1 / -1"})}>
+                <label style={S.fla}>Customer Email (for renewal outreach)</label>
+                <input style={Object.assign({}, S.fin, fErr.email ? S.finEr : {})} value={frm.email} placeholder="tax@company.com" type="email" onChange={function(e) { updFld("email",e.target.value); }} />
+                {fErr.email && <div style={S.fer}>{fErr.email}</div>}
+                <div style={{fontSize:11,color:"#94a3b8",marginTop:2}}>We will use this email to send renewal requests 90 days before expiration.</div>
               </div>
               <div style={S.fld}>
                 <label style={S.fla}>Certificate Type</label>
@@ -401,8 +533,3 @@ function App() {
     </div>
   );
 }
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-</script>
-</body>
-</html>
