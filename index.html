@@ -1,4 +1,21 @@
-import { useState, useMemo } from "react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CertGuard - Exemption Certificate Manager</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo } = React;
 
 const REASONS = ["Resale","Manufacturing","Agricultural","Government Entity","Non-Profit / Charitable","Industrial Processing","Direct Pay Permit","Foreign Diplomat","Tribal","Other"];
 const ALLST = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY","DC"];
@@ -34,73 +51,73 @@ function validate(f) {
 
 const Badge = ({ status }) => {
   const m = {
-    valid: ["#0d9488","#ccfbf1","Valid"],
-    expiring_soon: ["#d97706","#fef3c7","Expiring Soon"],
-    expired: ["#dc2626","#fee2e2","Expired"]
+    valid: {c:"#0d9488",bg:"#ccfbf1",l:"Valid"},
+    expiring_soon: {c:"#d97706",bg:"#fef3c7",l:"Expiring Soon"},
+    expired: {c:"#dc2626",bg:"#fee2e2",l:"Expired"}
   };
-  const [c, bg, l] = m[status] || ["#6b7280","#f3f4f6",status];
+  const v = m[status] || {c:"#6b7280",bg:"#f3f4f6",l:status};
   return (
-    <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:16,fontSize:12,fontWeight:600,color:c,background:bg}}>
-      {l}
+    <span style={{display:"inline-flex",alignItems:"center",gap:4,padding:"3px 10px",borderRadius:16,fontSize:12,fontWeight:600,color:v.c,background:v.bg}}>
+      {v.l}
     </span>
   );
 };
 
-const css = {
-  wrap: {minHeight:"100vh",background:"#f8fafc",fontFamily:"system-ui,-apple-system,sans-serif",color:"#1e293b"},
-  hdr: {background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"16px 24px"},
-  hdrIn: {maxWidth:1100,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12},
-  logo: {display:"flex",alignItems:"center",gap:10},
-  logoIc: {width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:16},
-  btn: {display:"inline-flex",alignItems:"center",gap:6,padding:"9px 16px",borderRadius:10,fontSize:13,fontWeight:600,border:"none",cursor:"pointer"},
-  btnP: {background:"#4f46e5",color:"#fff"},
-  btnS: {background:"#fff",border:"1px solid #e2e8f0",color:"#475569"},
-  btnD: {background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca"},
-  main: {maxWidth:1100,margin:"0 auto",padding:24},
-  row4: {display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12,marginBottom:24},
-  card: {background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:18},
-  cardIc: {width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:13,marginBottom:8},
-  cardV: {fontSize:26,fontWeight:800},
-  cardL: {fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:1,marginTop:4,fontWeight:600},
-  alert: {borderRadius:12,padding:14,display:"flex",gap:10,marginBottom:10,fontSize:13},
-  alertA: {background:"#fffbeb",border:"1px solid #fde68a",color:"#92400e"},
-  alertR: {background:"#fef2f2",border:"1px solid #fecaca",color:"#991b1b",marginBottom:24},
-  toolbar: {display:"flex",gap:12,marginBottom:20,flexWrap:"wrap"},
-  searchW: {flex:1,minWidth:200},
-  searchI: {width:"100%",background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:"9px 14px",fontSize:14,outline:"none",color:"#1e293b"},
-  fGroup: {display:"flex",gap:3,background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:3},
-  fBtn: {padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:600,border:"none",color:"#94a3b8",background:"transparent",cursor:"pointer"},
-  fBtnOn: {background:"#4f46e5",color:"#fff"},
-  tblW: {background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,overflow:"hidden"},
-  th: {padding:"12px 18px",textAlign:"left",fontSize:11,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:0.5,borderBottom:"1px solid #e2e8f0"},
-  td: {padding:"12px 18px",borderBottom:"1px solid #f1f5f9",verticalAlign:"middle"},
-  tFoot: {padding:"10px 18px",borderTop:"1px solid #e2e8f0",fontSize:12,color:"#94a3b8"},
-  stg: {display:"inline-block",background:"#f1f5f9",color:"#64748b",fontSize:11,padding:"2px 6px",borderRadius:4,margin:1},
-  aBtn: {background:"none",border:"none",padding:"4px 6px",fontSize:13,color:"#94a3b8",borderRadius:6,cursor:"pointer"},
-  ov: {position:"fixed",inset:0,background:"rgba(0,0,0,.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:16},
-  mdl: {background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,width:"100%",maxHeight:"90vh",overflowY:"auto",padding:24},
-  mdlS: {maxWidth:500},
-  mdlL: {maxWidth:640},
-  mdlH: {display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18},
-  mdlT: {fontSize:18,fontWeight:700},
-  xb: {background:"none",border:"none",color:"#94a3b8",fontSize:20,cursor:"pointer",padding:"2px 6px"},
-  fgr: {display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14},
-  fld: {display:"flex",flexDirection:"column",gap:5},
-  fla: {fontSize:11,fontWeight:600,color:"#94a3b8",textTransform:"uppercase",letterSpacing:0.5},
-  fin: {background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:"9px 14px",color:"#1e293b",fontSize:14,outline:"none",width:"100%"},
-  finEr: {borderColor:"#f87171"},
-  fer: {color:"#ef4444",fontSize:12},
-  sgr: {display:"flex",flexWrap:"wrap",gap:5,padding:10,background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:10,maxHeight:110,overflowY:"auto"},
-  sb: {padding:"3px 9px",borderRadius:7,fontSize:12,fontWeight:600,border:"none",color:"#94a3b8",background:"#e2e8f0",cursor:"pointer"},
-  sbOn: {background:"#4f46e5",color:"#fff"},
-  dgr: {display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,margin:"14px 0",fontSize:14},
-  dgl: {color:"#94a3b8"},
-  dgv: {color:"#1e293b",marginLeft:4},
-  dst: {display:"inline-block",background:"#ede9fe",color:"#6d28d9",fontSize:12,padding:"3px 8px",borderRadius:7,margin:2},
-  empty: {padding:40,textAlign:"center",color:"#94a3b8",fontSize:14},
+const S = {
+  wrap:{minHeight:"100vh",background:"#f8fafc",color:"#1e293b"},
+  hdr:{background:"#fff",borderBottom:"1px solid #e2e8f0",padding:"16px 24px"},
+  hdrIn:{maxWidth:1100,margin:"0 auto",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12},
+  logo:{display:"flex",alignItems:"center",gap:10},
+  logoIc:{width:40,height:40,borderRadius:12,background:"linear-gradient(135deg,#6366f1,#8b5cf6)",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:800,fontSize:16},
+  btn:{display:"inline-flex",alignItems:"center",gap:6,padding:"9px 16px",borderRadius:10,fontSize:13,fontWeight:600,border:"none",cursor:"pointer"},
+  btnP:{background:"#4f46e5",color:"#fff"},
+  btnS:{background:"#fff",border:"1px solid #e2e8f0",color:"#475569"},
+  btnD:{background:"#fef2f2",color:"#dc2626",border:"1px solid #fecaca"},
+  main:{maxWidth:1100,margin:"0 auto",padding:24},
+  row4:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:12,marginBottom:24},
+  card:{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,padding:18},
+  cardIc:{width:32,height:32,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontWeight:700,fontSize:13,marginBottom:8},
+  cardV:{fontSize:26,fontWeight:800},
+  cardL:{fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:1,marginTop:4,fontWeight:600},
+  alert:{borderRadius:12,padding:14,display:"flex",gap:10,marginBottom:10,fontSize:13},
+  alertA:{background:"#fffbeb",border:"1px solid #fde68a",color:"#92400e"},
+  alertR:{background:"#fef2f2",border:"1px solid #fecaca",color:"#991b1b",marginBottom:24},
+  toolbar:{display:"flex",gap:12,marginBottom:20,flexWrap:"wrap"},
+  searchW:{flex:1,minWidth:200},
+  searchI:{width:"100%",background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:"9px 14px",fontSize:14,outline:"none",color:"#1e293b"},
+  fGroup:{display:"flex",gap:3,background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:3},
+  fBtn:{padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:600,border:"none",color:"#94a3b8",background:"transparent",cursor:"pointer"},
+  fBtnOn:{background:"#4f46e5",color:"#fff"},
+  tblW:{background:"#fff",border:"1px solid #e2e8f0",borderRadius:14,overflow:"hidden"},
+  th:{padding:"12px 18px",textAlign:"left",fontSize:11,fontWeight:700,color:"#94a3b8",textTransform:"uppercase",letterSpacing:0.5,borderBottom:"1px solid #e2e8f0"},
+  td:{padding:"12px 18px",borderBottom:"1px solid #f1f5f9",verticalAlign:"middle"},
+  tFoot:{padding:"10px 18px",borderTop:"1px solid #e2e8f0",fontSize:12,color:"#94a3b8"},
+  stg:{display:"inline-block",background:"#f1f5f9",color:"#64748b",fontSize:11,padding:"2px 6px",borderRadius:4,margin:1},
+  aBtn:{background:"none",border:"none",padding:"4px 8px",fontSize:13,color:"#64748b",borderRadius:6,cursor:"pointer",fontWeight:500},
+  ov:{position:"fixed",inset:0,background:"rgba(0,0,0,.4)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:16},
+  mdl:{background:"#fff",border:"1px solid #e2e8f0",borderRadius:16,width:"100%",maxHeight:"90vh",overflowY:"auto",padding:24},
+  mdlS:{maxWidth:500},
+  mdlL:{maxWidth:640},
+  mdlH:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18},
+  mdlT:{fontSize:18,fontWeight:700},
+  xb:{background:"none",border:"none",color:"#94a3b8",fontSize:20,cursor:"pointer",padding:"2px 6px"},
+  fgr:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14},
+  fld:{display:"flex",flexDirection:"column",gap:5},
+  fla:{fontSize:11,fontWeight:600,color:"#94a3b8",textTransform:"uppercase",letterSpacing:0.5},
+  fin:{background:"#fff",border:"1px solid #e2e8f0",borderRadius:10,padding:"9px 14px",color:"#1e293b",fontSize:14,outline:"none",width:"100%",fontFamily:"inherit"},
+  finEr:{borderColor:"#f87171"},
+  fer:{color:"#ef4444",fontSize:12},
+  sgr:{display:"flex",flexWrap:"wrap",gap:5,padding:10,background:"#f8fafc",border:"1px solid #e2e8f0",borderRadius:10,maxHeight:110,overflowY:"auto"},
+  sb:{padding:"3px 9px",borderRadius:7,fontSize:12,fontWeight:600,border:"none",color:"#94a3b8",background:"#e2e8f0",cursor:"pointer"},
+  sbOn:{background:"#4f46e5",color:"#fff"},
+  dgr:{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,margin:"14px 0",fontSize:14},
+  dgl:{color:"#94a3b8"},
+  dgv:{color:"#1e293b",marginLeft:4},
+  dst:{display:"inline-block",background:"#ede9fe",color:"#6d28d9",fontSize:12,padding:"3px 8px",borderRadius:7,margin:2},
+  empty:{padding:40,textAlign:"center",color:"#94a3b8",fontSize:14},
 };
 
-export default function App() {
+function App() {
   const [certs, setCerts] = useState(seed);
   const [sQ, setSQ] = useState("");
   const [sF, setSF] = useState("all");
@@ -111,101 +128,100 @@ export default function App() {
   const [vCert, setVCert] = useState(null);
   const [nxId, setNxId] = useState(8);
 
-  const enriched = useMemo(() => certs.map(c => ({...c, status: gSt(c.expDate)})), [certs]);
+  const enriched = useMemo(function() { return certs.map(function(c) { return Object.assign({}, c, {status: gSt(c.expDate)}); }); }, [certs]);
 
-  const stats = useMemo(() => {
-    let v = 0, e = 0, x = 0;
-    enriched.forEach(c => {
-      if (c.status === "valid") v++;
-      else if (c.status === "expiring_soon") e++;
-      else x++;
-    });
-    return { total: enriched.length, valid: v, expiring: e, expired: x };
+  const stats = useMemo(function() {
+    var v=0, e=0, x=0;
+    enriched.forEach(function(c) { if(c.status==="valid") v++; else if(c.status==="expiring_soon") e++; else x++; });
+    return {total:enriched.length, valid:v, expiring:e, expired:x};
   }, [enriched]);
 
-  const filtered = useMemo(() => {
-    const q = sQ.toLowerCase();
-    return enriched.filter(c => {
-      const ms = !sQ || c.customer.toLowerCase().includes(q) || c.ein.includes(q) || c.id.toLowerCase().includes(q);
-      const mf = sF === "all" || c.status === sF;
+  const filtered = useMemo(function() {
+    var q = sQ.toLowerCase();
+    return enriched.filter(function(c) {
+      var ms = !sQ || c.customer.toLowerCase().indexOf(q)>=0 || c.ein.indexOf(q)>=0 || c.id.toLowerCase().indexOf(q)>=0;
+      var mf = sF==="all" || c.status===sF;
       return ms && mf;
     });
   }, [enriched, sQ, sF]);
 
-  const openNew = () => {
+  function openNew() {
     setFrm({customer:"",ein:"",type:"Blanket",reason:"Resale",states:[],issueDate:"",expDate:"",notes:""});
     setFErr({}); setEId(null); setModal("form");
-  };
-
-  const openEdit = (c) => {
-    setFrm({customer:c.customer,ein:c.ein,type:c.type,reason:c.reason,states:[...c.states],issueDate:c.issueDate,expDate:c.expDate,notes:c.notes});
+  }
+  function openEdit(c) {
+    setFrm({customer:c.customer,ein:c.ein,type:c.type,reason:c.reason,states:c.states.slice(),issueDate:c.issueDate,expDate:c.expDate,notes:c.notes});
     setFErr({}); setEId(c.id); setVCert(null); setModal("form");
-  };
-
-  const closeAll = () => { setModal(""); setVCert(null); };
-
-  const doDelete = (id) => {
-    setCerts(p => p.filter(c => c.id !== id));
-    setVCert(null);
-  };
-
-  const toggleSt = (st) => {
-    setFrm(f => ({
-      ...f,
-      states: f.states.includes(st) ? f.states.filter(x => x !== st) : [...f.states, st]
-    }));
-  };
-
-  const updFld = (k, v) => setFrm(f => ({...f, [k]: v}));
-
-  const doSubmit = () => {
-    const errs = validate(frm);
+  }
+  function closeAll() { setModal(""); setVCert(null); }
+  function doDelete(id) { setCerts(function(p) { return p.filter(function(c) { return c.id!==id; }); }); setVCert(null); }
+  function toggleSt(st) {
+    setFrm(function(f) {
+      var idx = f.states.indexOf(st);
+      var ns = f.states.slice();
+      if (idx>=0) ns.splice(idx,1); else ns.push(st);
+      return Object.assign({}, f, {states: ns});
+    });
+  }
+  function updFld(k, v) { setFrm(function(f) { var o = {}; o[k]=v; return Object.assign({}, f, o); }); }
+  function doSubmit() {
+    var errs = validate(frm);
     setFErr(errs);
     if (Object.keys(errs).length) return;
     if (eId) {
-      setCerts(p => p.map(c => c.id === eId ? {...c, ...frm} : c));
+      setCerts(function(p) { return p.map(function(c) { return c.id===eId ? Object.assign({}, c, frm) : c; }); });
     } else {
-      const pad = String(nxId).padStart(3, "0");
-      setNxId(n => n + 1);
-      setCerts(p => [{id: "EX-" + pad, ...frm}, ...p]);
+      var pad = String(nxId).padStart(3,"0");
+      setNxId(function(n) { return n+1; });
+      setCerts(function(p) { return [Object.assign({id:"EX-"+pad}, frm)].concat(p); });
     }
     closeAll();
-  };
+  }
+
+  var statData = [
+    {bg:"#64748b",val:stats.total,label:"Total"},
+    {bg:"#059669",val:stats.valid,label:"Valid"},
+    {bg:"#d97706",val:stats.expiring,label:"Expiring Soon"},
+    {bg:"#dc2626",val:stats.expired,label:"Expired"}
+  ];
+
+  var filterOpts = [
+    {v:"all",l:"All"},{v:"valid",l:"Valid"},{v:"expiring_soon",l:"Expiring"},{v:"expired",l:"Expired"}
+  ];
 
   return (
-    <div style={css.wrap}>
-      {/* Header */}
-      <div style={css.hdr}>
-        <div style={css.hdrIn}>
-          <div style={css.logo}>
-            <div style={css.logoIc}>CG</div>
+    <div style={S.wrap}>
+      <div style={S.hdr}>
+        <div style={S.hdrIn}>
+          <div style={S.logo}>
+            <div style={S.logoIc}>CG</div>
             <div>
               <div style={{fontSize:18,fontWeight:800}}>CertGuard</div>
               <div style={{fontSize:12,color:"#94a3b8"}}>Exemption Certificate Manager</div>
             </div>
           </div>
           <div style={{display:"flex",gap:8}}>
-            <button style={{...css.btn,...css.btnS}} onClick={() => setCerts([...certs])}>Revalidate</button>
-            <button style={{...css.btn,...css.btnP}} onClick={openNew}>+ New Certificate</button>
+            <button style={Object.assign({}, S.btn, S.btnS)} onClick={function() { setCerts(certs.slice()); }}>Revalidate</button>
+            <button style={Object.assign({}, S.btn, S.btnP)} onClick={openNew}>+ New Certificate</button>
           </div>
         </div>
       </div>
 
-      <div style={css.main}>
-        {/* Stats */}
-        <div style={css.row4}>
-          {[["#64748b",stats.total,"Total"],["#059669",stats.valid,"Valid"],["#d97706",stats.expiring,"Expiring Soon"],["#dc2626",stats.expired,"Expired"]].map(([c,v,l],i) => (
-            <div key={i} style={css.card}>
-              <div style={{...css.cardIc,background:c}}>{l[0]}</div>
-              <div style={css.cardV}>{v}</div>
-              <div style={css.cardL}>{l}</div>
-            </div>
-          ))}
+      <div style={S.main}>
+        <div style={S.row4}>
+          {statData.map(function(d, i) {
+            return (
+              <div key={i} style={S.card}>
+                <div style={Object.assign({}, S.cardIc, {background:d.bg})}>{d.label.charAt(0)}</div>
+                <div style={S.cardV}>{d.val}</div>
+                <div style={S.cardL}>{d.label}</div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* Alerts */}
         {stats.expiring > 0 && (
-          <div style={{...css.alert,...css.alertA}}>
+          <div style={Object.assign({}, S.alert, S.alertA)}>
             <div>
               <b>{stats.expiring} certificate{stats.expiring > 1 ? "s" : ""} expiring within 60 days</b>
               <div style={{fontSize:12,opacity:0.7,marginTop:2}}>Send renewal requests to avoid lapsed exemptions.</div>
@@ -213,7 +229,7 @@ export default function App() {
           </div>
         )}
         {stats.expired > 0 && (
-          <div style={{...css.alert,...css.alertR}}>
+          <div style={Object.assign({}, S.alert, S.alertR)}>
             <div>
               <b>{stats.expired} expired certificate{stats.expired > 1 ? "s" : ""} - action required</b>
               <div style={{fontSize:12,opacity:0.7,marginTop:2}}>Tax transactions until valid certificates are on file.</div>
@@ -221,164 +237,163 @@ export default function App() {
           </div>
         )}
 
-        {/* Toolbar */}
-        <div style={css.toolbar}>
-          <div style={css.searchW}>
-            <input style={css.searchI} placeholder="Search by customer, EIN, or ID..." value={sQ} onChange={e => setSQ(e.target.value)} />
+        <div style={S.toolbar}>
+          <div style={S.searchW}>
+            <input style={S.searchI} placeholder="Search by customer, EIN, or ID..." value={sQ} onChange={function(e) { setSQ(e.target.value); }} />
           </div>
-          <div style={css.fGroup}>
-            {[["all","All"],["valid","Valid"],["expiring_soon","Expiring"],["expired","Expired"]].map(([v,l]) => (
-              <button key={v} style={{...css.fBtn,...(sF === v ? css.fBtnOn : {})}} onClick={() => setSF(v)}>{l}</button>
-            ))}
+          <div style={S.fGroup}>
+            {filterOpts.map(function(f) {
+              return <button key={f.v} style={Object.assign({}, S.fBtn, sF===f.v ? S.fBtnOn : {})} onClick={function() { setSF(f.v); }}>{f.l}</button>;
+            })}
           </div>
         </div>
 
-        {/* Table */}
-        <div style={css.tblW}>
+        <div style={S.tblW}>
           <div style={{overflowX:"auto"}}>
             <table style={{width:"100%",borderCollapse:"collapse"}}>
               <thead>
                 <tr>
-                  <th style={css.th}>Customer</th>
-                  <th style={css.th}>Type / Reason</th>
-                  <th style={css.th}>Jurisdictions</th>
-                  <th style={css.th}>Expires</th>
-                  <th style={css.th}>Status</th>
-                  <th style={{...css.th,textAlign:"right"}}>Actions</th>
+                  <th style={S.th}>Customer</th>
+                  <th style={S.th}>Type / Reason</th>
+                  <th style={S.th}>Jurisdictions</th>
+                  <th style={S.th}>Expires</th>
+                  <th style={S.th}>Status</th>
+                  <th style={Object.assign({}, S.th, {textAlign:"right"})}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.length === 0 ? (
-                  <tr><td colSpan={6}><div style={css.empty}>No certificates found</div></td></tr>
-                ) : filtered.map(c => (
-                  <tr key={c.id} style={{cursor:"pointer"}} onClick={() => setVCert(c)}
-                    onMouseEnter={e => { e.currentTarget.style.background = "#f8fafc"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-                    <td style={css.td}>
-                      <div style={{fontWeight:600,color:"#1e293b"}}>{c.customer}</div>
-                      <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>{c.id} / {c.ein}</div>
-                    </td>
-                    <td style={css.td}>
-                      <div style={{color:"#475569"}}>{c.reason}</div>
-                      <div style={{fontSize:12,color:"#94a3b8"}}>{c.type}</div>
-                    </td>
-                    <td style={css.td}>
-                      {c.states.slice(0, 4).map(st => <span key={st} style={css.stg}>{st}</span>)}
-                      {c.states.length > 4 && <span style={{color:"#94a3b8",fontSize:11}}> +{c.states.length - 4}</span>}
-                    </td>
-                    <td style={{...css.td,color:"#94a3b8"}}>{c.expDate}</td>
-                    <td style={css.td}><Badge status={c.status} /></td>
-                    <td style={{...css.td,textAlign:"right"}} onClick={e => e.stopPropagation()}>
-                      <button style={css.aBtn} onClick={() => setVCert(c)}>View</button>
-                      <button style={css.aBtn} onClick={() => openEdit(c)}>Edit</button>
-                      <button style={{...css.aBtn,color:"#ef4444"}} onClick={() => doDelete(c.id)}>Del</button>
-                    </td>
-                  </tr>
-                ))}
+                  <tr><td colSpan={6}><div style={S.empty}>No certificates found</div></td></tr>
+                ) : filtered.map(function(c) {
+                  return (
+                    <tr key={c.id} style={{cursor:"pointer"}} onClick={function() { setVCert(c); }}
+                      onMouseEnter={function(e) { e.currentTarget.style.background="#f8fafc"; }}
+                      onMouseLeave={function(e) { e.currentTarget.style.background="transparent"; }}>
+                      <td style={S.td}>
+                        <div style={{fontWeight:600,color:"#1e293b"}}>{c.customer}</div>
+                        <div style={{fontSize:12,color:"#94a3b8",marginTop:2}}>{c.id} / {c.ein}</div>
+                      </td>
+                      <td style={S.td}>
+                        <div style={{color:"#475569"}}>{c.reason}</div>
+                        <div style={{fontSize:12,color:"#94a3b8"}}>{c.type}</div>
+                      </td>
+                      <td style={S.td}>
+                        {c.states.slice(0,4).map(function(st) { return <span key={st} style={S.stg}>{st}</span>; })}
+                        {c.states.length > 4 && <span style={{color:"#94a3b8",fontSize:11}}> +{c.states.length-4}</span>}
+                      </td>
+                      <td style={Object.assign({}, S.td, {color:"#94a3b8"})}>{c.expDate}</td>
+                      <td style={S.td}><Badge status={c.status} /></td>
+                      <td style={Object.assign({}, S.td, {textAlign:"right"})} onClick={function(e) { e.stopPropagation(); }}>
+                        <button style={S.aBtn} onClick={function() { setVCert(c); }}>View</button>
+                        <button style={S.aBtn} onClick={function() { openEdit(c); }}>Edit</button>
+                        <button style={Object.assign({}, S.aBtn, {color:"#ef4444"})} onClick={function() { doDelete(c.id); }}>Del</button>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-          <div style={css.tFoot}>Showing {filtered.length} of {enriched.length} certificates</div>
+          <div style={S.tFoot}>Showing {filtered.length} of {enriched.length} certificates</div>
         </div>
       </div>
 
-      {/* View Modal */}
       {vCert && (
-        <div style={css.ov} onClick={closeAll}>
-          <div style={{...css.mdl,...css.mdlS}} onClick={e => e.stopPropagation()}>
-            <div style={css.mdlH}>
+        <div style={S.ov} onClick={closeAll}>
+          <div style={Object.assign({}, S.mdl, S.mdlS)} onClick={function(e) { e.stopPropagation(); }}>
+            <div style={S.mdlH}>
               <div>
-                <div style={css.mdlT}>{vCert.customer}</div>
+                <div style={S.mdlT}>{vCert.customer}</div>
                 <div style={{fontSize:13,color:"#94a3b8",marginTop:3}}>{vCert.id}</div>
               </div>
-              <button style={css.xb} onClick={closeAll}>x</button>
+              <button style={S.xb} onClick={closeAll}>x</button>
             </div>
             <div style={{marginBottom:14}}><Badge status={gSt(vCert.expDate)} /></div>
-            <div style={css.dgr}>
-              <div><span style={css.dgl}>EIN:</span><span style={css.dgv}>{vCert.ein}</span></div>
-              <div><span style={css.dgl}>Type:</span><span style={css.dgv}>{vCert.type}</span></div>
-              <div><span style={css.dgl}>Reason:</span><span style={css.dgv}>{vCert.reason}</span></div>
-              <div><span style={css.dgl}>Issued:</span><span style={css.dgv}>{vCert.issueDate}</span></div>
-              <div><span style={css.dgl}>Expires:</span><span style={css.dgv}>{vCert.expDate}</span></div>
+            <div style={S.dgr}>
+              <div><span style={S.dgl}>EIN: </span><span style={S.dgv}>{vCert.ein}</span></div>
+              <div><span style={S.dgl}>Type: </span><span style={S.dgv}>{vCert.type}</span></div>
+              <div><span style={S.dgl}>Reason: </span><span style={S.dgv}>{vCert.reason}</span></div>
+              <div><span style={S.dgl}>Issued: </span><span style={S.dgv}>{vCert.issueDate}</span></div>
+              <div><span style={S.dgl}>Expires: </span><span style={S.dgv}>{vCert.expDate}</span></div>
             </div>
             <div>
-              <span style={css.dgl}>Jurisdictions:</span>
+              <span style={S.dgl}>Jurisdictions:</span>
               <div style={{display:"flex",flexWrap:"wrap",gap:5,marginTop:6}}>
-                {vCert.states.map(st => <span key={st} style={css.dst}>{st}</span>)}
+                {vCert.states.map(function(st) { return <span key={st} style={S.dst}>{st}</span>; })}
               </div>
             </div>
             {vCert.notes && (
               <div style={{marginTop:10}}>
-                <span style={css.dgl}>Notes:</span>
+                <span style={S.dgl}>Notes:</span>
                 <div style={{color:"#475569",fontSize:14,marginTop:4}}>{vCert.notes}</div>
               </div>
             )}
             <div style={{display:"flex",gap:8,marginTop:18}}>
-              <button style={{...css.btn,...css.btnP,flex:1,justifyContent:"center"}} onClick={() => { closeAll(); openEdit(vCert); }}>Edit</button>
-              <button style={{...css.btn,...css.btnD,flex:1,justifyContent:"center"}} onClick={() => { closeAll(); doDelete(vCert.id); }}>Delete</button>
+              <button style={Object.assign({}, S.btn, S.btnP, {flex:1,justifyContent:"center"})} onClick={function() { closeAll(); openEdit(vCert); }}>Edit</button>
+              <button style={Object.assign({}, S.btn, S.btnD, {flex:1,justifyContent:"center"})} onClick={function() { closeAll(); doDelete(vCert.id); }}>Delete</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Form Modal */}
       {modal === "form" && (
-        <div style={css.ov} onClick={closeAll}>
-          <div style={{...css.mdl,...css.mdlL}} onClick={e => e.stopPropagation()}>
-            <div style={css.mdlH}>
-              <div style={css.mdlT}>{eId ? "Edit Certificate" : "New Exemption Certificate"}</div>
-              <button style={css.xb} onClick={closeAll}>x</button>
+        <div style={S.ov} onClick={closeAll}>
+          <div style={Object.assign({}, S.mdl, S.mdlL)} onClick={function(e) { e.stopPropagation(); }}>
+            <div style={S.mdlH}>
+              <div style={S.mdlT}>{eId ? "Edit Certificate" : "New Exemption Certificate"}</div>
+              <button style={S.xb} onClick={closeAll}>x</button>
             </div>
-            <div style={css.fgr}>
-              <div style={css.fld}>
-                <label style={css.fla}>Customer Name</label>
-                <input style={{...css.fin,...(fErr.customer ? css.finEr : {})}} value={frm.customer} onChange={e => updFld("customer", e.target.value)} />
-                {fErr.customer && <div style={css.fer}>{fErr.customer}</div>}
+            <div style={S.fgr}>
+              <div style={S.fld}>
+                <label style={S.fla}>Customer Name</label>
+                <input style={Object.assign({}, S.fin, fErr.customer ? S.finEr : {})} value={frm.customer} onChange={function(e) { updFld("customer",e.target.value); }} />
+                {fErr.customer && <div style={S.fer}>{fErr.customer}</div>}
               </div>
-              <div style={css.fld}>
-                <label style={css.fla}>EIN / Tax ID</label>
-                <input style={{...css.fin,...(fErr.ein ? css.finEr : {})}} value={frm.ein} placeholder="XX-XXXXXXX" onChange={e => updFld("ein", e.target.value)} />
-                {fErr.ein && <div style={css.fer}>{fErr.ein}</div>}
+              <div style={S.fld}>
+                <label style={S.fla}>EIN / Tax ID</label>
+                <input style={Object.assign({}, S.fin, fErr.ein ? S.finEr : {})} value={frm.ein} placeholder="XX-XXXXXXX" onChange={function(e) { updFld("ein",e.target.value); }} />
+                {fErr.ein && <div style={S.fer}>{fErr.ein}</div>}
               </div>
-              <div style={css.fld}>
-                <label style={css.fla}>Certificate Type</label>
-                <select style={css.fin} value={frm.type} onChange={e => updFld("type", e.target.value)}>
-                  {CTYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              <div style={S.fld}>
+                <label style={S.fla}>Certificate Type</label>
+                <select style={S.fin} value={frm.type} onChange={function(e) { updFld("type",e.target.value); }}>
+                  {CTYPES.map(function(t) { return <option key={t} value={t}>{t}</option>; })}
                 </select>
               </div>
-              <div style={css.fld}>
-                <label style={css.fla}>Exemption Reason</label>
-                <select style={css.fin} value={frm.reason} onChange={e => updFld("reason", e.target.value)}>
-                  {REASONS.map(r => <option key={r} value={r}>{r}</option>)}
+              <div style={S.fld}>
+                <label style={S.fla}>Exemption Reason</label>
+                <select style={S.fin} value={frm.reason} onChange={function(e) { updFld("reason",e.target.value); }}>
+                  {REASONS.map(function(r) { return <option key={r} value={r}>{r}</option>; })}
                 </select>
               </div>
-              <div style={css.fld}>
-                <label style={css.fla}>Issue Date</label>
-                <input type="date" style={{...css.fin,...(fErr.issueDate ? css.finEr : {})}} value={frm.issueDate} onChange={e => updFld("issueDate", e.target.value)} />
-                {fErr.issueDate && <div style={css.fer}>{fErr.issueDate}</div>}
+              <div style={S.fld}>
+                <label style={S.fla}>Issue Date</label>
+                <input type="date" style={Object.assign({}, S.fin, fErr.issueDate ? S.finEr : {})} value={frm.issueDate} onChange={function(e) { updFld("issueDate",e.target.value); }} />
+                {fErr.issueDate && <div style={S.fer}>{fErr.issueDate}</div>}
               </div>
-              <div style={css.fld}>
-                <label style={css.fla}>Expiration Date</label>
-                <input type="date" style={{...css.fin,...(fErr.expDate ? css.finEr : {})}} value={frm.expDate} onChange={e => updFld("expDate", e.target.value)} />
-                {fErr.expDate && <div style={css.fer}>{fErr.expDate}</div>}
+              <div style={S.fld}>
+                <label style={S.fla}>Expiration Date</label>
+                <input type="date" style={Object.assign({}, S.fin, fErr.expDate ? S.finEr : {})} value={frm.expDate} onChange={function(e) { updFld("expDate",e.target.value); }} />
+                {fErr.expDate && <div style={S.fer}>{fErr.expDate}</div>}
               </div>
             </div>
-            <div style={{...css.fld,marginBottom:14}}>
-              <label style={css.fla}>Jurisdictions</label>
-              <div style={{...css.sgr,...(fErr.states ? {borderColor:"#f87171"} : {})}}>
-                {ALLST.map(st => (
-                  <button key={st} style={{...css.sb,...(frm.states.includes(st) ? css.sbOn : {})}} onClick={() => toggleSt(st)}>{st}</button>
-                ))}
+            <div style={Object.assign({}, S.fld, {marginBottom:14})}>
+              <label style={S.fla}>Jurisdictions</label>
+              <div style={Object.assign({}, S.sgr, fErr.states ? {borderColor:"#f87171"} : {})}>
+                {ALLST.map(function(st) {
+                  var sel = frm.states.indexOf(st) >= 0;
+                  return <button key={st} style={Object.assign({}, S.sb, sel ? S.sbOn : {})} onClick={function() { toggleSt(st); }}>{st}</button>;
+                })}
               </div>
-              {fErr.states && <div style={css.fer}>{fErr.states}</div>}
+              {fErr.states && <div style={S.fer}>{fErr.states}</div>}
             </div>
-            <div style={css.fld}>
-              <label style={css.fla}>Notes</label>
-              <textarea style={{...css.fin,resize:"none",height:56}} value={frm.notes} onChange={e => updFld("notes", e.target.value)} />
+            <div style={S.fld}>
+              <label style={S.fla}>Notes</label>
+              <textarea style={Object.assign({}, S.fin, {resize:"none",height:56})} value={frm.notes} onChange={function(e) { updFld("notes",e.target.value); }} />
             </div>
             <div style={{display:"flex",gap:10,marginTop:18}}>
-              <button style={{...css.btn,...css.btnP,flex:1,justifyContent:"center"}} onClick={doSubmit}>{eId ? "Update" : "Save"} Certificate</button>
-              <button style={{...css.btn,...css.btnS}} onClick={closeAll}>Cancel</button>
+              <button style={Object.assign({}, S.btn, S.btnP, {flex:1,justifyContent:"center"})} onClick={doSubmit}>{eId ? "Update" : "Save"} Certificate</button>
+              <button style={Object.assign({}, S.btn, S.btnS)} onClick={closeAll}>Cancel</button>
             </div>
           </div>
         </div>
@@ -386,3 +401,8 @@ export default function App() {
     </div>
   );
 }
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
